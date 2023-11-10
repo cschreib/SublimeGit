@@ -46,8 +46,8 @@ class GitCommitWindowCmd(GitCmd, GitStatusHelper):
                '--verbose' if self.is_verbose else None]
         exit, stdout, stderr = self.git(cmd, cwd=repo)
 
-        stderr = stderr.strip()
         if stderr:
+            stderr = stderr.strip()
             for line in stderr.splitlines():
                 stdout += "# %s\n" % line
 
