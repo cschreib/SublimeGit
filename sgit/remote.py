@@ -72,6 +72,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if not self.panel_shown:
             self.window.run_command('show_panel', {'panel': 'output.git-fetch'})
         self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
 
 
 class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
@@ -163,6 +164,7 @@ class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if not self.panel_shown:
             self.window.run_command('show_panel', {'panel': 'output.git-push'})
         self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
 
 
 class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
@@ -227,6 +229,7 @@ class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if not self.panel_shown:
             self.window.run_command('show_panel', {'panel': 'output.git-pull'})
         self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
 
 
 class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
@@ -266,6 +269,7 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if not self.panel_shown:
             self.window.run_command('show_panel', {'panel': 'output.git-push'})
         self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
 
 
 class GitPullCommand(WindowCommand, GitCmd, GitRemoteHelper):
@@ -305,6 +309,7 @@ class GitPullCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if not self.panel_shown:
             self.window.run_command('show_panel', {'panel': 'output.git-pull'})
         self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
 
 
 class GitRemoteAddCommand(WindowCommand, GitCmd, GitRemoteHelper):
