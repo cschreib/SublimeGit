@@ -119,9 +119,9 @@ class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
                 self.window.run_command('git_remote_add')
                 return
 
-        if len(remotes) > 1:
-            choices = self.format_quick_remotes(remotes)
+        choices = self.format_quick_remotes(remotes)
 
+        if len(choices) > 1:
             def on_done(idx):
                 if idx == -1:
                     return
@@ -130,7 +130,7 @@ class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
             self.window.show_quick_panel(choices, on_done)
         else:
-            self.on_remote(repo, branch, remotes[0])
+            self.on_remote(repo, branch, choices[0][0])
 
     def on_remote(self, repo, branch, remote):
         def on_done(rbranch):
@@ -188,9 +188,9 @@ class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
                 self.window.run_command('git_remote_add')
                 return
 
-        if len(remotes) > 1:
-            choices = self.format_quick_remotes(remotes)
+        choices = self.format_quick_remotes(remotes)
 
+        if len(choices) > 1:
             def on_done(idx):
                 if idx == -1:
                     return
@@ -199,7 +199,7 @@ class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
             self.window.show_quick_panel(choices, on_done)
         else:
-            self.on_remote(repo, branch, remotes[0])
+            self.on_remote(repo, branch, choices[0][0])
 
     def on_remote(self, repo, branch, remote):
         remote_branches = self.get_remote_branches(repo, remote)
