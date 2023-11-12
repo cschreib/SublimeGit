@@ -4,9 +4,9 @@ Quickstart
 Prerequisites
 -------------
 
-Sublime Text 2 or 3
-~~~~~~~~~~~~~~~~~~~
-Needless to say, Sublime Text is required to use SublimeGit. Any version of Sublime Text 2 or 3 should work.
+Sublime Text 2, 3, or 4
+~~~~~~~~~~~~~~~~~~~~~~~
+Needless to say, Sublime Text is required to use SublimeGit. Any version of Sublime Text 2, 3, or 4 should work.
 
 Git
 ~~~
