@@ -231,7 +231,7 @@ Now, if we try to just execute :ref:`Git: Push <cmd-push>` we might be in for a 
 
 What gives? Well, since we've only just added the remote, without specifying it as the default remote for any of the branches, we need to push a little bit differently the first time around.
 
-To do this, execute the command :ref:`Git: Push Current Branch <cmd-push-current-branch>`:
+To do this, execute the command :ref:`Git: Publish Current Branch <cmd-publish-current-branch>`:
 
 .. image:: img/tutorial/tutorial29.png
 

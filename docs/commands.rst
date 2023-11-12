@@ -76,15 +76,15 @@ Fetching and Pulling
 .. autowindowcmd:: sgit.remote.GitFetchOtherBranchCommand
 .. _cmd-pull:
 .. autowindowcmd:: sgit.remote.GitPullCommand
-.. autowindowcmd:: sgit.remote.GitPullCurrentBranchCommand
+.. autowindowcmd:: sgit.remote.GitPullOtherBranchCommand
 
 
 Pushing
 -------
 .. _cmd-push:
 .. autowindowcmd:: sgit.remote.GitPushCommand
-.. _cmd-push-current-branch:
-.. autowindowcmd:: sgit.remote.GitPushCurrentBranchCommand
+.. _cmd-publish-current-branch:
+.. autowindowcmd:: sgit.remote.GitPublishCurrentBranchCommand
 
 .. _stashing:
 

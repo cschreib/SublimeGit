@@ -18,8 +18,8 @@ NO_BRANCH_REMOTES = u"No remotes have been configured for the branch %s and no o
 CURRENT_NO_UPSTREAM = u"No upstream currently is currently specified for {branch}. Do you want to set the upstream to {merge} on {remote}?"
 CURRENT_DIFFERENT_UPSTREAM = u"The upstream for {branch} is currently set to {branch_merge} on {branch_remote}. Do you want to change it to {merge} on {remote}?"
 
-NO_UPSTREAM = u"No upstream is configured for your current branch. Do you want to run Git: Push Current Branch?"
-NO_TRACKING = u"No tracking information is configured for your current branch. Do you want to run Git: Pull Current Branch?"
+NO_UPSTREAM = u"No upstream is configured for your current branch. Do you want to run Git: Publish Current Branch?"
+NO_TRACKING = u"No tracking information is configured for your current branch. Do you want to run Git: Pull Other Branch?"
 
 REMOTE_SHOW_TITLE_PREFIX = '*git-remote*: '
 
@@ -141,9 +141,9 @@ class GitFetchSingleBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.window.run_command('git_status', {'refresh_only': True})
 
 
-class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
+class GitPublishCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
-    Push the current branch to a remote
+    Push the current branch as a new or existing branch on a remote
 
     This is the command to use if you are pushing a branch to a remote
     for the first time, or to a different remote than the configured upstream.
@@ -233,9 +233,24 @@ class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.window.run_command('git_status', {'refresh_only': True})
 
 
-class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
+class GitPullOtherBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
-    Documentation coming soon.
+    Pull a given remote branch into the current branch
+
+    This is very similar to the Merge command, except that the merged branch
+    is fetched from the remote before merging. This ensures that the merged
+    branch is up-to-date with the remote.
+
+    If there is only one remote configured, that will be used, otherwise you
+    will be asked to select a remote. If there are no remotes, you will be asked
+    to add one.
+
+    You will be asked to supply the name of the remote branch to merge.
+
+    .. warning::
+
+        Trying to pull when in a detached head state will give an error
+        message. This is not generally something you want to do.
     """
 
     def run(self):
@@ -300,7 +315,20 @@ class GitPullCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
 class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
-    Documentation coming soon.
+    Push the current branch on the tracked remote
+
+    This is the command to use if you are pushing a branch that already tracks
+    a remote branch, and you just want to update this remote branch with your
+    local changes.
+
+    If the current branch does not yet track a remote branch, you will be asked
+    if you want to use the "Publish Current Branch" command instead, which will
+    set up branch tracking before pushing.
+
+    .. warning::
+
+        Trying to push when in a detached head state will give an error
+        message. This is not generally something you want to do.
     """
 
     def run(self):
@@ -321,7 +349,7 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
         branch_remote, branch_merge = self.get_branch_upstream(repo, branch)
         if not branch_remote or not branch_merge:
             if sublime.ok_cancel_dialog(NO_UPSTREAM, 'Yes'):
-                self.window.run_command('git_push_current_branch')
+                self.window.run_command('git_publish_current_branch')
             return
 
         self.panel = self.window.get_output_panel('git-push')
@@ -340,7 +368,24 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
 class GitPullCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
-    Documentation coming soon.
+    Pull the tracked remote branch into the current branch
+
+    This is the command to use if the current branch has been modified on the
+    remote since it was last pulled, and you want to update your local branch
+    to match the latest version on the remote.
+
+    If there is only one remote configured, that will be used, otherwise you
+    will be asked to select a remote. If there are no remotes, you will be asked
+    to add one.
+
+    If the current branch does not yet track a remote branch, you will be asked
+    if you want to use the "Pull Other Branch" command instead, which allows you
+    to pull any other branch from the remote into the current branch.
+
+    .. warning::
+
+        Trying to pull when in a detached head state will give an error
+        message. This is not generally something you want to do.
     """
 
     def run(self):
@@ -361,7 +406,7 @@ class GitPullCommand(WindowCommand, GitCmd, GitRemoteHelper):
         branch_remote, branch_merge = self.get_branch_upstream(repo, branch)
         if not branch_remote or not branch_merge:
             if sublime.ok_cancel_dialog(NO_TRACKING, 'Yes'):
-                self.window.run_command('git_pull_current_branch')
+                self.window.run_command('git_pull_other_branch')
             return
 
         self.panel = self.window.get_output_panel('git-pull')
