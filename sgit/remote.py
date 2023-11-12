@@ -76,6 +76,71 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.window.run_command('git_status', {'refresh_only': True})
 
 
+class GitFetchSingleBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
+    """
+    Fetches git objects for a single branch from the remote repository
+
+    If there is only one remote configured, this remote will be
+    used for fetching. If there are multiple remotes, you will be
+    asked to select the remote to fetch from.
+    """
+
+    def run(self):
+        repo = self.get_repo()
+        if not repo:
+            return
+
+        remotes = self.get_remotes(repo)
+        if not remotes:
+            if sublime.ok_cancel_dialog(NO_REMOTES, 'Add Remote'):
+                self.window.run_command('git_remote_add')
+                return
+
+        choices = self.format_quick_remotes(remotes)
+
+        if len(choices) > 1:
+            def on_done(idx):
+                if idx == -1:
+                    return
+                remote = choices[idx][0]
+                self.on_remote(repo, remote)
+
+            self.window.show_quick_panel(choices, on_done)
+        else:
+            self.on_remote(repo, choices[0][0])
+
+    def on_remote(self, repo, remote):
+        remote_branches = self.get_remote_branches(repo, remote)
+        if not remote_branches:
+            return sublime.error_message("No branches on remote %s" % remote)
+
+        choices = self.format_quick_branches(remote_branches)
+
+        def on_done(idx):
+            if idx == -1:
+                return
+            branch = choices[idx][0]
+            self.on_remote_branch(repo, remote, branch)
+
+        sublime.set_timeout(partial(self.window.show_quick_panel, choices, on_done), 50)
+
+    def on_remote_branch(self, repo, remote, branch):
+        self.panel = self.window.get_output_panel('git-pull')
+        self.panel_shown = False
+
+        cmd = ['fetch', remote, '%s:%s' % (branch, branch)]
+
+        thread = self.git_async(cmd, cwd=repo, on_data=self.on_data)
+        runner = StatusSpinner(thread, "Fetching %s from %s" % (branch, remote))
+        runner.start()
+
+    def on_data(self, d):
+        if not self.panel_shown:
+            self.window.run_command('show_panel', {'panel': 'output.git-pull'})
+        self.panel.run_command('git_panel_append', {'content': d, 'scroll': True})
+        self.window.run_command('git_status', {'refresh_only': True})
+
+
 class GitPushCurrentBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
     Push the current branch to a remote

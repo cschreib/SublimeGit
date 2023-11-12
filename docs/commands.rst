@@ -73,6 +73,7 @@ Working with Remotes
 Fetching and Pulling
 --------------------
 .. autowindowcmd:: sgit.remote.GitFetchCommand
+.. autowindowcmd:: sgit.remote.GitFetchOtherBranchCommand
 .. _cmd-pull:
 .. autowindowcmd:: sgit.remote.GitPullCommand
 .. autowindowcmd:: sgit.remote.GitPullCurrentBranchCommand
