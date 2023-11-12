@@ -122,6 +122,9 @@ If you don't use a plugin, it might be annoying that its commands keep showing u
     }
 
 
+You will need to restart Sublime Text for these changes to take effect.
+
+
 Using SublimeGit
 ----------------
 
