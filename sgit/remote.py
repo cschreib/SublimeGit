@@ -28,7 +28,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
     """
     Fetches git objects from the remote repository
 
-    If there is only one remote configured, this remove will be
+    If there is only one remote configured, this remote will be
     used for fetching. If there are multiple remotes, you will be
     asked to select the remote to fetch from.
     """
