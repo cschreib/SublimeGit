@@ -121,33 +121,6 @@ If you don't use a plugin, it might be annoying that its commands keep showing u
         }
     }
 
-.. _add-license:
-
-Adding a License
-----------------
-
-If you decide to buy a license, the email you receive will contain information on how to install it. There are two ways to do it, depending on how comfortable you are with Sublime Text. Also, we love You.
-
-Automatic
-~~~~~~~~~
-
-Run the command **SublimeGit: Add License** and follow the instructions. Almost couldn't be easier!
-
-
-Manual
-~~~~~~
-
-Simply add the following to your SublimeGit User Settings file::
-
-    "email": "MY_EMAIL",
-    "product_key": "MY_LICENSE_KEY"
-
-Replacing ``MY_EMAIL`` and ``MY_LICENSE_KEY`` with the correct values. If you've lost your license, send us an email at support@sublimegit.net and we'll get you sorted out.
-
-.. note::
-
-    To find the correct settings file, navigate to **Preferences > Package Settings > SublimeGit > Settings - User**
-
 
 Using SublimeGit
 ----------------
