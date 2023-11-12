@@ -33,7 +33,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
     asked to select the remote to fetch from.
     """
 
-    def run(self, ask_remotes=False):
+    def run(self):
         repo = self.get_repo()
         if not repo:
             return
@@ -44,8 +44,9 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
                 self.window.run_command('git_remote_add')
                 return
 
-        if len(remotes) > 1:
-            choices = self.format_quick_remotes(remotes)
+        choices = self.format_quick_remotes(remotes)
+
+        if len(choices) > 1:
             choices.append(['+ All', 'Fetch from all configured remotes', 'git fetch --all'])
 
             def on_done(idx):
@@ -58,7 +59,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
             self.window.show_quick_panel(choices, on_done)
         else:
-            self.on_remote(repo, remote=remotes[0])
+            self.on_remote(repo, remote=choices[0][0])
 
     def on_remote(self, repo, remote=None):
         self.panel = self.window.get_output_panel('git-fetch')
