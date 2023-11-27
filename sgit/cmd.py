@@ -111,12 +111,12 @@ class Cmd(object):
             return (proc.returncode, self.decode(stdout, encoding, fallback), self.decode(stderr, encoding, fallback))
         except OSError as e:
             if ignore_errors:
-                return (0, '')
+                return (0, '', '')
             sublime.error_message(self.get_executable_error())
             raise SublimeGitException("Could not execute command: %s" % e)
         except UnicodeDecodeError as e:
             if ignore_errors:
-                return (0, '')
+                return (0, '', '')
             sublime.error_message(self.get_decoding_error(encoding, fallback))
             raise SublimeGitException("Could not execute command: %s" % command)
 

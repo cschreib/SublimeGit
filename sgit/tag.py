@@ -75,7 +75,7 @@ class GitAddTagCommand(WindowCommand, GitTagHelper, GitErrorHelper, GitCmd):
             else:
                 sublime.status_message("Added tag %s" % name)
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
 
 
 class GitTagCommand(WindowCommand, GitTagHelper, GitErrorHelper, GitCmd):

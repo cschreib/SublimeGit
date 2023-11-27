@@ -34,7 +34,7 @@ class GitStashWindowCmd(GitCmd, GitStashHelper, GitErrorHelper):
                 name, _ = stashes[choice]
                 exit_code, stdout, stderr = self.git(['stash', action, '-q', 'stash@{%s}' % name], cwd=repo)
                 if exit_code != 0:
-                    sublime.error_message(self.format_error_message(stderr))
+                    sublime.error_message(self.format_error_output(stdout, stderr))
                 window = sublime.active_window()
                 if window:
                     window.run_command('git_status', {'refresh_only': True})

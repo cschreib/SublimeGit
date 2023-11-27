@@ -284,6 +284,9 @@ class GitErrorHelper(object):
             msg = msg.rstrip()[:-8]
         return msg
 
+    def format_error_output(self, stdout, stderr):
+        return self.format_error_message(stdout if stderr is None else stderr)
+
 
 class GitStatusHelper(object):
 

@@ -72,7 +72,7 @@ class GitCustomCommand(WindowCommand, GitCmd, GitErrorHelper):
         if exit == 0:
             self.on_output(stdout)
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
         self.window.run_command('git_status', {'refresh_only': True})
 
     def run_async(self, repo, cmd):

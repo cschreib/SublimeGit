@@ -53,7 +53,7 @@ class GitCheckoutBranchCommand(WindowCommand, GitCheckoutWindowCmd):
             panel.run_command('git_panel_write', {'content': stderr})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
         self.window.run_command('git_status', {'refresh_only': True})
 
 
@@ -96,7 +96,7 @@ class GitCheckoutTagCommand(WindowCommand, GitCheckoutWindowCmd, GitTagHelper):
             panel.run_command('git_panel_write', {'content': stderr})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
         self.window.run_command('git_status', {'refresh_only': True})
 
 
@@ -132,7 +132,7 @@ class GitCheckoutCommitCommand(WindowCommand, GitCheckoutWindowCmd):
             panel.run_command('git_panel_write', {'content': stderr})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
         self.window.run_command('git_status', {'refresh_only': True})
 
 
@@ -176,7 +176,7 @@ class GitCheckoutNewBranchCommand(WindowCommand, GitCheckoutWindowCmd):
             panel.run_command('git_panel_write', {'content': stderr})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
-            sublime.error_message(self.format_error_message(stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
         self.window.run_command('git_status', {'refresh_only': True})
 
 
@@ -226,7 +226,7 @@ class GitCheckoutRemoteBranchCommand(WindowCommand, GitCheckoutWindowCmd, GitRem
                 panel.run_command('git_panel_write', {'content': stderr})
                 self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
             else:
-                sublime.error_message(self.format_error_message(stderr))
+                sublime.error_message(self.format_error_output(stdout, stderr))
             self.window.run_command('git_status', {'refresh_only': True})
 
 

@@ -376,7 +376,7 @@ class GitDiffStageUnstageHunkCommand(GitDiffTextCmd, GitErrorHelper, TextCommand
                 '-']
             exit, stdout, stderr = self.git(cmd, stdin=patch, cwd=repo)
             if exit != 0:
-                sublime.error_message(self.format_error_message(stderr))
+                sublime.error_message(self.format_error_output(stdout, stderr))
             self.view.run_command('git_diff_refresh')
 
 
@@ -411,7 +411,7 @@ class GitDiffDiscardHunkCommand(GitDiffTextCmd, GitErrorHelper, TextCommand):
             cmd = ['apply', '--ignore-whitespace', '--reverse']
             exit, stdout, stderr = self.git(cmd, stdin=patch, cwd=repo)
             if exit != 0:
-                sublime.error_message(self.format_error_message(stderr))
+                sublime.error_message(self.format_error_output(stdout, stderr))
             self.view.run_command('git_diff_refresh')
 
 

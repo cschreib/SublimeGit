@@ -49,7 +49,7 @@ class GitMergeCommand(WindowCommand, GitCmd, GitBranchHelper, GitErrorHelper, Gi
             panel.run_command('git_panel_write', {'content': stdout})
             self.window.run_command('show_panel', {'panel': 'output.git-merge'})
         else:
-            sublime.error_message(self.format_error_message(stdout))
+            sublime.error_message(self.format_error_output(stdout, stderr))
 
         self.window.run_command('git_status', {'refresh_only': True})
 
@@ -69,6 +69,6 @@ class GitMergeAbortCommand(WindowCommand, GitCmd, GitBranchHelper, GitErrorHelpe
 
         exit, stdout, stderr = self.git(["merge", "--abort"], cwd=repo)
         if exit != 0:
-            sublime.error_message(self.format_error_message(stdout))
+            sublime.error_message(self.format_error_output(stdout, stderr))
 
         self.window.run_command('git_status', {'refresh_only': True})
