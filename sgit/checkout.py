@@ -235,7 +235,7 @@ class GitCheckoutCurrentFileCommand(TextCommand, GitCmd, GitStatusHelper):
     Documentation coming soon.
     """
 
-    def run(self, edit):
+    def run(self):
         filename = self.view.file_name()
         if not filename:
             sublime.error_message("Cannot checkout an unsaved file.")
@@ -246,7 +246,7 @@ class GitCheckoutCurrentFileCommand(TextCommand, GitCmd, GitStatusHelper):
             return
 
         if not self.file_in_git(repo, filename):
-            sublime.error_message("The file %s is not tracked by git.")
+            sublime.error_message("The file %s is not tracked by git." % filename.replace(repo, '').lstrip('/'))
             return
 
         exit, stdout, stderr = self.git(['checkout', '--quiet', '--', filename], cwd=repo)
