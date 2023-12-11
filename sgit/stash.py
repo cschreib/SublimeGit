@@ -60,12 +60,15 @@ class GitStashCommand(WindowCommand, GitCmd, GitStatusHelper):
         self.git_exit_code(['update-index', '--refresh'], cwd=repo)
 
         # get files status
-        untracked_files, unstaged_files, _ = self.get_files_status(repo)
+        untracked_files, unstaged_files, _, unmerged_files = self.get_files_status(repo)
 
         # check for if there's something to stash
         if not unstaged_files:
             if (untracked and not untracked_files) or (not untracked):
                 return sublime.error_message("No local changes to save")
+
+        if unmerged_files:
+            return sublime.error_message("Please fix merge conflicts before stashing")
 
         self.window.show_input_panel('Stash title:', '', on_done, noop, noop)
 
