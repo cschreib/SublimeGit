@@ -123,19 +123,16 @@ class GitStatusBuilder(GitCmd, GitStatusHelper, GitRemoteHelper, GitStashHelper)
         status = ""
         if remote:
             status += "Remote:\t%s/%s @ %s\n" % (remote, branch, remote_url)
-            result = self.git_string(['rev-list', '--left-right', '--count',
-                                     remote + "/" + branch + "..." + branch],
-                                     cwd=repo)
-            remote_ahead, local_ahead = result.split('\t')
-            if local_ahead != "0" and remote_ahead != "0":
+            remote_ahead, local_ahead = self.get_remote_commit_differences(repo, remote, branch)
+            if local_ahead != 0 and remote_ahead != 0:
                 status += "\t\tYour branch and %s/%s have diverged,\n" \
                             % (remote, branch)
                 status += "\t\tand have %s and %s different commit each, " \
                             "respectively\n" % (local_ahead, remote_ahead)
-            elif local_ahead != "0":
+            elif local_ahead != 0:
                 status += "\t\tYour branch is ahead by %s commits\n" \
                             % (local_ahead)
-            elif remote_ahead != "0":
+            elif remote_ahead != 0:
                 status += "\t\tRemote branch is ahead by %s commits\n" \
                             % (remote_ahead)
         status += "Local:\t%s %s\n" % (branch if branch else '(no branch)', abbrev_dir)

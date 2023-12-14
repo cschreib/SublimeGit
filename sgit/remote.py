@@ -1,5 +1,6 @@
 # coding: utf-8
 from functools import partial
+import logging
 
 import sublime
 from sublime_plugin import WindowCommand
@@ -21,7 +22,16 @@ CURRENT_DIFFERENT_UPSTREAM = u"The upstream for {branch} is currently set to {br
 NO_UPSTREAM = u"No upstream is configured for your current branch. Do you want to run Git: Publish Current Branch?"
 NO_TRACKING = u"No tracking information is configured for your current branch. Do you want to run Git: Pull Other Branch?"
 
+FORCE_PUSH = (u"It is discouraged to rewrite history which has already been pushed. "
+              u"Are you sure you want to force your local changes on the remote? "
+              u"Any remote commit not in your local branch will be lost.")
+
+REMOTE_DIVERGED = (u"Your local branch and the remote have diverged. Please run Git: Pull to attempt to merge remote changes, "
+                   u"or Git: Force Push to discard the remote changes entirely.")
+
 REMOTE_SHOW_TITLE_PREFIX = '*git-remote*: '
+
+logger = logging.getLogger('SublimeGit.remote')
 
 
 class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
@@ -331,7 +341,7 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
         message. This is not generally something you want to do.
     """
 
-    def run(self):
+    def run(self, force=False):
         repo = self.get_repo()
         if not repo:
             return
@@ -352,10 +362,23 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
                 self.window.run_command('git_publish_current_branch')
             return
 
+        remote_ahead, _ = self.get_remote_commit_differences(repo, branch_remote, branch)
+        logger.warning('{}'.format(remote_ahead))
+        if remote_ahead != 0:
+            if force:
+                if not sublime.ok_cancel_dialog(FORCE_PUSH, 'Force Push'):
+                    return
+            else:
+                return sublime.error_message(REMOTE_DIVERGED)
+
         self.panel = self.window.get_output_panel('git-push')
         self.panel_shown = False
 
-        thread = self.git_async(['push', '-v'], cwd=repo, on_data=self.on_data)
+        cmd = ['push', '-v']
+        if force:
+            cmd += ['--force']
+
+        thread = self.git_async(cmd, cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Pushing to %s" % (branch_remote))
         runner.start()
 

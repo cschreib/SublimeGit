@@ -42,6 +42,7 @@ Committing
 .. autowindowcmd:: sgit.commit.GitQuickCommitCurrentFileCommand
 .. autowindowcmd:: sgit.commit.GitCommitCommand
 .. autowindowcmd:: sgit.commit.GitCommitAmendCommand
+.. autowindowcmd:: sgit.commit.GitCommitUndoCommand
 
 
 Logs

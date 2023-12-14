@@ -258,6 +258,14 @@ class GitRemoteHelper(GitBranchHelper):
             choices.append([branch, b])
         return choices
 
+    def get_remote_commit_differences(self, repo, remote, branch):
+        result = self.git_string(['rev-list', '--left-right', '--count',
+                         remote + "/" + branch + "..." + branch],
+                         cwd=repo)
+
+        remote_ahead, local_ahead = result.split('\t')
+        return int(remote_ahead), int(local_ahead)
+
 
 class GitStashHelper(object):
 

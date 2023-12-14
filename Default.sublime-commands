@@ -46,6 +46,7 @@
     { "caption": "Git: Fetch", "command": "git_fetch"},
     { "caption": "Git: Fetch Single Branch", "command": "git_fetch_single_branch"},
     { "caption": "Git: Push", "command": "git_push"},
+    { "caption": "Git: Force Push", "command": "git_push", "args": {"force": true}},
     { "caption": "Git: Publish Current Branch", "command": "git_publish_current_branch"},
     { "caption": "Git: Pull", "command": "git_pull"},
     { "caption": "Git: Pull Other Branch", "command": "git_pull_other_branch"},
