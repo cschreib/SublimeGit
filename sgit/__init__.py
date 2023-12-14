@@ -44,7 +44,7 @@ from .add import GitQuickAddCommand, GitAddCurrentFileCommand
 
 from .commit import (GitCommitCommand, GitCommitAmendCommand, GitCommitTemplateCommand,
                      GitCommitPerformCommand, GitQuickCommitCommand, GitQuickCommitCurrentFileCommand,
-                     GitCommitSaveCommand)
+                     GitCommitSaveCommand, GitCommitUndoCommand)
 from .commit import GitCommitEventListener
 
 from .stash import (GitStashCommand, GitSnapshotCommand,

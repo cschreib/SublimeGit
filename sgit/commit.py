@@ -19,8 +19,14 @@ GIT_COMMIT_TEMPLATE = u"""{old_msg}
 # with '#' will be ignored, and an empty message aborts the commit.
 {status}"""
 
-GIT_AMEND_PUSHED = (u"It is discouraged to rewrite history which has already been pushed. "
-                    u"Are you sure you want to amend the commit?")
+GIT_REWRITE_HISTORY_WARNING = u"It is discouraged to rewrite history which has already been pushed. "
+
+GIT_AMEND_PUSHED = GIT_REWRITE_HISTORY_WARNING + u"Are you sure you want to amend the commit?"
+
+GIT_UNDO_CONFIRM = (u"Are you sure you want to undo the last commit? The commit message "
+                    u"will be lost, but files will keep their content from the commit.")
+
+GIT_UNDO_CONFIRM_PUSHED = GIT_REWRITE_HISTORY_WARNING + GIT_UNDO_CONFIRM
 
 GIT_MERGE_TEMPLATE = u"Merge branch '%s' into %s"
 
@@ -325,3 +331,25 @@ class GitQuickCommitCurrentFileCommand(TextCommand, GitCmd, GitStatusHelper):
 
         # update status if necessary
         self.view.window().run_command('git_status', {'refresh_only': True})
+
+
+class GitCommitUndoCommand(GitCommitWindowCmd, WindowCommand):
+    """
+    Documentation coming soon.
+    """
+
+    def run(self):
+        repo = self.get_repo()
+        if not repo:
+            return
+
+        unpushed = self.git_exit_code(['diff', '--exit-code', '--quiet', '@{upstream}..'], cwd=repo)
+        if unpushed == 0:
+            message = GIT_UNDO_CONFIRM_PUSHED
+        else:
+            message = GIT_UNDO_CONFIRM
+
+        if not sublime.ok_cancel_dialog(message, 'Undo commit'):
+            return
+
+        self.git(['reset', 'HEAD~1'])

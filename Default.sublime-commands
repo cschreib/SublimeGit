@@ -24,6 +24,7 @@
     { "caption": "Git: Amend Commit", "command": "git_commit_amend"},
     { "caption": "Git: Quick Commit", "command": "git_quick_commit"},
     { "caption": "Git: Quick Commit Current File", "command": "git_quick_commit_current_file"},
+    { "caption": "Git: Undo Last Commit", "command": "git_commit_undo"},
 
     { "caption": "Git: Stash", "command": "git_stash"},
     { "caption": "Git: Stash Include Untracked", "command": "git_stash", "args": {"untracked": true}},
