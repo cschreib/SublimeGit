@@ -1039,6 +1039,8 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
             return
 
         # perform various unstaging/deleting/resurrection actions
+        submodules = self.get_submodules(repo)
+
         for s, f in files:
             staged = s == STAGED_CHANGES
             status = self.get_staging_status(repo, f) if staged else self.get_worktree_status(repo, f)
@@ -1053,6 +1055,12 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
                 self.git(['checkout', '--', f], cwd=repo)
             elif status == 'N':
                 self.git(['rm', '-f', '--', f], cwd=repo)
+            elif f in submodules:
+                if staged:
+                    self.git(['reset', '-q', 'HEAD', '--', f], cwd=repo)
+
+                self.git(['reset', '--hard'], cwd=os.path.join(repo, f))
+                self.git(['submodule', 'update', '--init', '--recursive', '--', f], cwd=repo)
             else:
                 if staged:
                     self.git(['checkout', 'HEAD', '--', f], cwd=repo)
@@ -1077,6 +1085,13 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
         if output:
             status, _ = output[0].split('\t')
             return status
+
+    def get_submodules(self, repo):
+        output = self.git_lines(['submodule', 'status', '--cached'], cwd=repo)
+        if not output:
+            return []
+
+        return [line[1:].split(' ')[1] for line in output]
 
 
 class GitStatusStashCmd(GitStatusTextCmd, GitStashHelper, GitErrorHelper):
