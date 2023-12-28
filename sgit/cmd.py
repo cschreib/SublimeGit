@@ -111,6 +111,42 @@ class Cmd(object):
                         pass
             raise
 
+    def worker_run(self, job):
+        if threading.get_ident() == worker_thread.ident:
+            # We are already in the worker thread, execute immediately
+            outputs = job()
+        else:
+            # Schedule on the worker thread and wait for the output now
+            try:
+                worker_queue.put(job, timeout=10)
+                outputs = output_queue.get(timeout=10)
+            except:
+                raise SublimeGitException("Could not execute command (timeout)")
+
+        if outputs is Exception:
+            raise outputs
+
+        return outputs
+
+    def worker_run_async(self, job, on_complete=None, on_exception=None):
+        # Spawn a thread to schedule the job on the worker thread and wait for the output
+        def async_inner(on_complete=None, on_exception=None):
+            try:
+                worker_queue.put(job, timeout=10)
+                outputs = output_queue.get(timeout=10)
+            except:
+                outputs = SublimeGitException("Could not execute command (timeout)")
+
+            if outputs is Exception:
+                logger.debug('async-exception: %s' % outputs)
+                if callable(on_exception):
+                    sublime.set_timeout(partial(on_exception, outputs), 0)
+            else:
+                if callable(on_complete):
+                    sublime.set_timeout(partial(on_complete, outputs), 0)
+
+        return threading.Thread(target=partial(async_inner, on_complete, on_exception))
+
     # sync commands
     def cmd(self, cmd, stdin=None, cwd=None, ignore_errors=False, encoding=None, fallback=None):
         command = self.build_command(cmd)
@@ -150,68 +186,49 @@ class Cmd(object):
                 sublime.error_message(self.get_decoding_error(encoding, fallback))
                 return SublimeGitException("Could not execute command: %s" % command)
 
-        try:
-            worker_queue.put(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback), timeout=10)
-            outputs = output_queue.get(timeout=10)
-        except:
-            raise SublimeGitException("Could not execute command (timeout)")
-
-        if outputs is SublimeGitException:
-            raise outputs
-
-        return outputs
+        return self.worker_run(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback))
 
     # async commands
-    def cmd_async(self, cmd, cwd=None, **callbacks):
+    def cmd_async(self, cmd, cwd=None, on_data=None, on_complete=None, on_error=None, on_exception=None):
         command = self.build_command(cmd)
         environment = self.env()
         encoding = get_setting('encoding', 'utf-8')
         fallback = get_setting('fallback_encodings', [])
 
-        def async_inner(cmd, cwd, encoding, on_data=None, on_complete=None, on_error=None, on_exception=None):
-            def job(cmd, cwd, encoding, on_data=None, on_complete=None, on_error=None, on_exception=None):
-                try:
-                    logger.debug('async-cmd: %s', cmd)
+        def job(cmd, cwd, encoding, on_data=None):
+            logger.debug('async-cmd: %s', cmd)
 
-                    if cwd:
-                        os.chdir(cwd)
+            if cwd:
+                os.chdir(cwd)
 
-                    proc = subprocess.Popen(cmd,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT,
-                                            startupinfo=self.startupinfo(),
-                                            env=environment)
+            proc = subprocess.Popen(cmd,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    startupinfo=self.startupinfo(),
+                                    env=environment)
 
-                    for line in iter(proc.stdout.readline, b''):
-                        logger.debug('async-out: %s', line.strip())
-                        line = self.decode(line, encoding, fallback)
-                        if callable(on_data):
-                            sublime.set_timeout(partial(on_data, line), 0)
+            for line in iter(proc.stdout.readline, b''):
+                logger.debug('async-out: %s', line.strip())
+                line = self.decode(line, encoding, fallback)
+                if callable(on_data):
+                    sublime.set_timeout(partial(on_data, line), 0)
 
-                    proc.wait()
-                    logger.debug('async-exit: %s', proc.returncode)
-                    if proc.returncode == 0:
-                        if callable(on_complete):
-                            sublime.set_timeout(partial(on_complete, proc.returncode), 0)
-                    else:
-                        if callable(on_error):
-                            sublime.set_timeout(partial(on_error, proc.returncode), 0)
+            proc.wait()
+            logger.debug('async-exit: %s', proc.returncode)
 
-                except (OSError, UnicodeDecodeError) as e:
-                    logger.debug('async-exception: %s' % e)
-                    if callable(on_exception):
-                        sublime.set_timeout(partial(on_exception, e), 0)
+            return proc.returncode
 
-            try:
-                worker_queue.put(partial(job, cmd, cwd, encoding, on_data, on_complete, on_error, on_exception), timeout=10)
-                output_queue.get(timeout=10)
-            except e:
-                logger.debug('async-exception: %s' % e)
-                if callable(on_exception):
-                    sublime.set_timeout(partial(on_exception, e), 0)
+        def on_complete_inner(return_code, on_complete=None, on_error=None):
+            if return_code == 0:
+                if callable(on_complete):
+                    sublime.set_timeout(partial(on_complete, return_code), 0)
+            else:
+                if callable(on_error):
+                    sublime.set_timeout(partial(on_error, return_code), 0)
 
-        thread = threading.Thread(target=partial(async_inner, command, cwd, encoding, **callbacks))
-        return thread
+        return self.worker_run_async(partial(job, command, cwd, encoding, on_data),
+            on_complete=partial(on_complete_inner, on_complete, on_error),
+            on_exception=on_exception)
 
     # messages
     EXECUTABLE_ERROR = ("Executable '{bin}' was not found in PATH. Current PATH:\n\n"
