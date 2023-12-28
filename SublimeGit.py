@@ -7,6 +7,7 @@ import sublime
 # set up some logging
 logging.basicConfig(level=logging.WARNING, format="[%(asctime)s - %(levelname)-8s - %(name)s] %(message)s")
 logger = logging.getLogger('SublimeGit')
+worker_logger = logging.getLogger('SublimeGitWorker')
 
 # reload modules if necessary
 LOAD_ORDER = [
@@ -61,6 +62,9 @@ if sys.version_info[0] == 2:
     lvl = getattr(logging, settings.get('log_level', '').upper(), logging.WARNING)
     logger.setLevel(lvl)
 
+    worker_lvl = getattr(logging, settings.get('worker_log_level', '').upper(), logging.WARNING)
+    worker_logger.setLevel(worker_lvl)
+
     from sgit import *  # noqa
     from sgit.git_extensions.legit import *  # noqa
     from sgit.git_extensions.git_flow import *  # noqa
@@ -82,6 +86,9 @@ else:
         # set log level
         lvl = getattr(logging, settings.get('log_level', '').upper(), logging.WARNING)
         logger.setLevel(lvl)
+
+        worker_lvl = getattr(logging, settings.get('worker_log_level', '').upper(), logging.WARNING)
+        worker_logger.setLevel(worker_lvl)
 
         # Enable plugins
         git_extensions.legit.enabled = settings.get('git_extensions', {}).get('legit', True)
