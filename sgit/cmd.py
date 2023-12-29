@@ -8,6 +8,15 @@ import webbrowser
 import queue
 from datetime import datetime
 from functools import partial
+import sys
+import traceback
+
+def get_thread_stack(thread):
+    frame = sys._current_frames().get(thread.ident, None)
+    if not frame:
+        return []
+
+    return traceback.format_stack(f=frame)
 
 import sublime
 
@@ -22,21 +31,44 @@ class SublimeGitException(Exception):
     pass
 
 worker_queue = queue.Queue(1)
-output_queue = queue.Queue(1)
+output_queue = {}
+output_queue_lock = threading.Lock()
+last_task_id = 0
+max_tries = 100
 
-def process_queue_one(block=True):
-    inputs = worker_queue.get(block=block, timeout=1)
-    worker_logger.debug("got input, processing...")
+def get_output_queue(task_id):
+    global output_queue_lock
+    global output_queue
+
+    with output_queue_lock:
+        if not task_id in output_queue:
+            output_queue[task_id] = queue.Queue(1)
+
+        return output_queue[task_id]
+
+def release_output_queue(task_id):
+    global output_queue_lock
+    global output_queue
+
+    with output_queue_lock:
+        if task_id in output_queue:
+            del output_queue[task_id]
+
+def process_queue_one():
+    task_id, job = worker_queue.get(timeout=1)
+    worker_logger.info("[%s,%s] got input, processing...", threading.get_ident(), task_id)
 
     try:
-        outputs = inputs()
-        worker_logger.debug("got output, sending...")
-    except:
-        worker_logger.debug("got error, sending...")
-        output_queue.put(SublimeGitException("Unhandled exception in queue command"))
+        outputs = job()
+        worker_logger.info("[%s,%s] got output, sending...", threading.get_ident(), task_id)
+    except Exception as e:
+        worker_logger.warning("[%s,%s] got error: %s", threading.get_ident(), task_id, e)
+        worker_logger.warning("[%s,%s] sending...", threading.get_ident(), task_id)
+        outputs = SublimeGitException("Unhandled exception in queue command: %s" % e)
 
-    output_queue.put(outputs, timeout=1)
-    worker_logger.debug("sent")
+    get_output_queue(task_id).put(outputs, timeout=1)
+
+    worker_logger.info("[%s,%s] sent", threading.get_ident(), task_id)
 
 def process_queue():
     while True:
@@ -46,6 +78,48 @@ def process_queue():
         except:
             worker_logger.debug("no input")
             pass
+
+def next_task_id():
+    global last_task_id
+    last_task_id += 1
+    task_id = last_task_id
+    return task_id
+
+def dump_worker_thread_stack():
+    worker_logger.warning("worker thread stack:")
+    for entry in get_thread_stack(worker_thread):
+        worker_logger.warning(entry.trim('\n\r'))
+
+def push_new_job(task_id, job):
+    num_tries = 0
+    while True:
+        try:
+            worker_queue.put((task_id, job), timeout=0.1)
+            return
+        except Exception as e:
+            worker_logger.warning("[%s,%s] put timed out, waiting some more...", threading.get_ident(), task_id)
+            num_tries += 1
+            if num_tries == max_tries:
+                dump_worker_thread_stack()
+                raise e
+
+def get_job_output(task_id):
+    try:
+        num_tries = 0
+        queue = get_output_queue(task_id)
+
+        while True:
+            try:
+                return queue.get(timeout=0.1)
+            except Exception as e:
+                worker_logger.warning("[%s,%s] get timed out, waiting some more...", threading.get_ident(), task_id)
+                num_tries += 1
+                if num_tries == max_tries:
+                    dump_worker_thread_stack()
+                    raise e
+
+    finally:
+        release_output_queue(task_id)
 
 worker_thread = threading.Thread(target=process_queue)
 worker_thread.start()
@@ -111,41 +185,60 @@ class Cmd(object):
                         pass
             raise
 
-    def worker_run(self, job):
+    def worker_run(self, job, task_id=None):
+        if not task_id:
+            task_id = next_task_id()
+
+        worker_logger.info("[%s,%s] running task", threading.get_ident(), task_id)
+
         if threading.get_ident() == worker_thread.ident:
             # We are already in the worker thread, execute immediately
+            worker_logger.info("[%s,%s] immediate call", threading.get_ident(), task_id)
             outputs = job()
         else:
             # Schedule on the worker thread and wait for the output now
             try:
-                worker_queue.put(job, timeout=10)
-                outputs = output_queue.get(timeout=10)
-            except:
-                raise SublimeGitException("Could not execute command (timeout)")
+                worker_logger.info("[%s,%s] new input, sending...", threading.get_ident(), task_id)
+                push_new_job(task_id, job)
+                worker_logger.info("[%s,%s] wait for output...", threading.get_ident(), task_id)
+                outputs = get_job_output(task_id)
+            except Exception as e:
+                outputs = SublimeGitException("Could not execute command: %s" % e)
 
-        if outputs is Exception:
+        if isinstance(outputs, Exception):
+            worker_logger.info("[%s,%s] got error", threading.get_ident(), task_id)
             raise outputs
 
+        worker_logger.info("[%s,%s] got output: %s", threading.get_ident(), task_id, str(outputs)[:32])
         return outputs
 
-    def worker_run_async(self, job, on_complete=None, on_exception=None):
-        # Spawn a thread to schedule the job on the worker thread and wait for the output
-        def async_inner(on_complete=None, on_exception=None):
-            try:
-                worker_queue.put(job, timeout=10)
-                outputs = output_queue.get(timeout=10)
-            except:
-                outputs = SublimeGitException("Could not execute command (timeout)")
+    def worker_run_async(self, job, on_complete=None, on_exception=None, task_id=None):
+        if not task_id:
+            task_id = next_task_id()
 
-            if outputs is Exception:
-                logger.debug('async-exception: %s' % outputs)
+        worker_logger.info("[%s,%s] running async task", threading.get_ident(), task_id)
+
+        # Spawn a thread to schedule the job on the worker thread and wait for the output
+        def async_inner(on_complete, on_exception, task_id):
+            try:
+                worker_logger.info("[%s,%s] async new input, sending...", threading.get_ident(), task_id)
+                push_new_job(task_id, job)
+                worker_logger.info("[%s,%s] async wait for output...", threading.get_ident(), task_id)
+                outputs = get_job_output(task_id)
+            except Exception as e:
+                outputs = SublimeGitException("Could not execute command: %s" % e)
+
+            if isinstance(outputs, Exception):
+                worker_logger.info("[%s,%s] async got error", threading.get_ident(), task_id)
+                logger.debug('async-exception: %s', outputs)
                 if callable(on_exception):
                     sublime.set_timeout(partial(on_exception, outputs), 0)
             else:
+                worker_logger.info("[%s,%s] async got output", threading.get_ident(), task_id)
                 if callable(on_complete):
                     sublime.set_timeout(partial(on_complete, outputs), 0)
 
-        return threading.Thread(target=partial(async_inner, on_complete, on_exception))
+        return threading.Thread(target=partial(async_inner, on_complete, on_exception, task_id))
 
     # sync commands
     def cmd(self, cmd, stdin=None, cwd=None, ignore_errors=False, encoding=None, fallback=None):
@@ -153,11 +246,12 @@ class Cmd(object):
         environment = self.env()
         encoding = encoding or get_setting('encoding', 'utf-8')
         fallback = fallback or get_setting('fallback_encodings', [])
+        task_id = next_task_id()
 
-        def job(command, stdin, cwd, environment, ignore_errors, encoding, fallback):
+        logger.debug("[%s,%s] cmd: %s", threading.get_ident(), task_id, command)
+
+        def job(command, stdin, cwd, environment, ignore_errors, encoding, fallback, task_id):
             try:
-                logger.debug("cmd: %s", command)
-
                 if stdin and hasattr(stdin, 'encode'):
                     stdin = stdin.encode(encoding)
 
@@ -172,21 +266,21 @@ class Cmd(object):
                                         env=environment)
                 stdout, stderr = proc.communicate(stdin)
 
-                logger.debug("out: (%s) %s", proc.returncode, [stdout[:100]])
+                logger.debug("[%s,%s] out: (%s) %s", threading.get_ident(), task_id, proc.returncode, [stdout[:100]])
 
                 return (proc.returncode, self.decode(stdout, encoding, fallback), self.decode(stderr, encoding, fallback))
             except OSError as e:
                 if ignore_errors:
                     return (0, '', '')
                 sublime.error_message(self.get_executable_error())
-                return SublimeGitException("Could not execute command: %s" % e)
+                return SublimeGitException("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, e))
             except UnicodeDecodeError as e:
                 if ignore_errors:
                     return (0, '', '')
                 sublime.error_message(self.get_decoding_error(encoding, fallback))
-                return SublimeGitException("Could not execute command: %s" % command)
+                return SublimeGitException("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, command))
 
-        return self.worker_run(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback))
+        return self.worker_run(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback, task_id), task_id=task_id)
 
     # async commands
     def cmd_async(self, cmd, cwd=None, on_data=None, on_complete=None, on_error=None, on_exception=None):
@@ -194,27 +288,28 @@ class Cmd(object):
         environment = self.env()
         encoding = get_setting('encoding', 'utf-8')
         fallback = get_setting('fallback_encodings', [])
+        task_id = next_task_id()
 
-        def job(cmd, cwd, encoding, on_data=None):
-            logger.debug('async-cmd: %s', cmd)
+        logger.debug('[%s,%s] async-cmd: %s', threading.get_ident(), task_id, command)
 
+        def job(command, cwd, encoding, on_data, task_id):
             if cwd:
                 os.chdir(cwd)
 
-            proc = subprocess.Popen(cmd,
+            proc = subprocess.Popen(command,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
                                     startupinfo=self.startupinfo(),
                                     env=environment)
 
             for line in iter(proc.stdout.readline, b''):
-                logger.debug('async-out: %s', line.strip())
+                logger.debug('[%s,%s] async-out: %s', threading.get_ident(), task_id, line.strip())
                 line = self.decode(line, encoding, fallback)
                 if callable(on_data):
                     sublime.set_timeout(partial(on_data, line), 0)
 
             proc.wait()
-            logger.debug('async-exit: %s', proc.returncode)
+            logger.debug('[%s,%s] async-exit: %s', threading.get_ident(), task_id, proc.returncode)
 
             return proc.returncode
 
@@ -226,9 +321,10 @@ class Cmd(object):
                 if callable(on_error):
                     sublime.set_timeout(partial(on_error, return_code), 0)
 
-        return self.worker_run_async(partial(job, command, cwd, encoding, on_data),
+        return self.worker_run_async(partial(job, command, cwd, encoding, on_data, task_id),
             on_complete=partial(on_complete_inner, on_complete, on_error),
-            on_exception=on_exception)
+            on_exception=on_exception,
+            task_id=task_id)
 
     # messages
     EXECUTABLE_ERROR = ("Executable '{bin}' was not found in PATH. Current PATH:\n\n"
