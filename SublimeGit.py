@@ -53,7 +53,6 @@ for postfix in LOAD_ORDER:
 if reloaded:
     logger.info('Reloaded %s' % ", ".join(reloaded))
 
-
 # import commands and listeners
 if sys.version_info[0] == 2:
     settings = sublime.load_settings('SublimeGit.sublime-settings')
@@ -69,6 +68,8 @@ if sys.version_info[0] == 2:
     from sgit.git_extensions.legit import *  # noqa
     from sgit.git_extensions.git_flow import *  # noqa
 
+    util.load_settings()
+
     # Enable plugins
     git_extensions.legit.enabled = settings.get('git_extensions', {}).get('legit', True)
     git_extensions.git_flow.enabled = settings.get('git_extensions', {}).get('git_flow', True)
@@ -79,6 +80,8 @@ else:
     from .sgit import *  # noqa
     from .sgit.git_extensions.legit import *  # noqa
     from .sgit.git_extensions.git_flow import *  # noqa
+
+    util.load_settings()
 
     def plugin_loaded():
         settings = sublime.load_settings('SublimeGit.sublime-settings')

@@ -136,13 +136,23 @@ def abbreviate_dir(dirname):
 
 # settings helpers
 
-def get_settings():
-    return sublime.load_settings(SETTINGS_FILE)
+global_settings = {}
+
+def load_settings():
+    global global_settings
+    global_settings = sublime.load_settings(SETTINGS_FILE).to_dict()
 
 
 def get_setting(key, default=None):
-    return get_settings().get(key, default)
+    if not key in global_settings:
+        return default
+
+    return global_settings[key]
 
 
 def get_executable(key, default=None):
-    return get_setting('git_executables', {}).get(key, default)
+    exes = get_setting('git_executables', {})
+    if not key in exes:
+        return default
+
+    return exes[key]
