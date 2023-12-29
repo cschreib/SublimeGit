@@ -546,11 +546,31 @@ class GitStatusCommand(WindowCommand, GitStatusBuilder):
             view.run_command('git_status_refresh')
 
 
-class GitStatusRefreshCommand(TextCommand, GitStatusBuilder, GitStatusMoveCmd):
+class GitStatusReplaceCommand(TextCommand, GitStatusMoveCmd):
     _lpop = False
 
     def is_visible(self):
         return False
+
+    def run(self, edit, goto, status):
+        self.view.set_read_only(False)
+        self.view.replace(edit, sublime.Region(0, self.view.size()), status)
+        self.view.set_read_only(True)
+
+        if goto:
+            self.goto(goto)
+        else:
+            self.goto(GOTO_DEFAULT)
+
+
+class GitStatusRefreshCommand(TextCommand, GitStatusBuilder):
+    _lpop = False
+
+    def is_visible(self):
+        return False
+
+    def set_status(self, goto, status):
+        self.view.run_command('git_status_replace', {'goto': goto, 'status': status})
 
     def run(self, edit, goto=None):
         if not self.view.settings().get('git_view') == 'status':
@@ -560,18 +580,8 @@ class GitStatusRefreshCommand(TextCommand, GitStatusBuilder, GitStatusMoveCmd):
         if not repo:
             return
 
-        status = self.build_status(repo)
-        if not status:
-            return
-
-        self.view.set_read_only(False)
-        self.view.replace(edit, sublime.Region(0, self.view.size()), status)
-        self.view.set_read_only(True)
-
-        if goto:
-            self.goto(goto)
-        else:
-            self.goto(GOTO_DEFAULT)
+        thread = self.worker_run_async(partial(self.build_status, repo), on_complete=partial(self.set_status, goto))
+        thread.start()
 
 
 class GitStatusEventListener(EventListener):

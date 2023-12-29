@@ -32,7 +32,7 @@ from .remote import (GitPublishCurrentBranchCommand, GitPullOtherBranchCommand,
                      GitFetchCommand, GitFetchSingleBranchCommand, GitPullCommand, GitPushCommand,
                      GitRemoteCommand, GitRemoteAddCommand)
 
-from .status import (GitStatusCommand, GitStatusRefreshCommand, GitQuickStatusCommand,
+from .status import (GitStatusCommand, GitStatusReplaceCommand, GitStatusRefreshCommand, GitQuickStatusCommand,
                      GitStatusMoveCommand, GitStatusStageCommand,
                      GitStatusUnstageCommand, GitStatusDiscardCommand,
                      GitStatusOpenFileCommand, GitStatusDiffCommand,
