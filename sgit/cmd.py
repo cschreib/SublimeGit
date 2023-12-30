@@ -85,10 +85,10 @@ def next_task_id():
     task_id = last_task_id
     return task_id
 
-def dump_worker_thread_stack():
-    worker_logger.warning("worker thread stack:")
+def dump_worker_thread_stack(operation, task_id):
+    worker_logger.warning("[%s,%s] %s timed out, worker thread stack:", threading.get_ident(), task_id, operation)
     for entry in get_thread_stack(worker_thread):
-        worker_logger.warning(entry.trim('\n\r'))
+        worker_logger.warning(entry.replace('\r', '').split('\n')[0])
 
 def push_new_job(task_id, job):
     num_tries = 0
@@ -97,10 +97,10 @@ def push_new_job(task_id, job):
             worker_queue.put((task_id, job), timeout=0.1)
             return
         except Exception as e:
-            worker_logger.warning("[%s,%s] put timed out, waiting some more...", threading.get_ident(), task_id)
+            worker_logger.info("[%s,%s] put timed out, waiting some more...", threading.get_ident(), task_id)
             num_tries += 1
             if num_tries == max_tries:
-                dump_worker_thread_stack()
+                dump_worker_thread_stack('put', task_id)
                 raise e
 
 def get_job_output(task_id):
@@ -112,10 +112,10 @@ def get_job_output(task_id):
             try:
                 return queue.get(timeout=0.1)
             except Exception as e:
-                worker_logger.warning("[%s,%s] get timed out, waiting some more...", threading.get_ident(), task_id)
+                worker_logger.info("[%s,%s] get timed out, waiting some more...", threading.get_ident(), task_id)
                 num_tries += 1
                 if num_tries == max_tries:
-                    dump_worker_thread_stack()
+                    dump_worker_thread_stack('get', task_id)
                     raise e
 
     finally:
