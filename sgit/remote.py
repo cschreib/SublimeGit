@@ -5,7 +5,7 @@ import logging
 import sublime
 from sublime_plugin import WindowCommand
 
-from .util import StatusSpinner, noop
+from .util import StatusSpinner, noop, get_setting
 from .cmd import GitCmd
 from .helpers import GitRemoteHelper
 
