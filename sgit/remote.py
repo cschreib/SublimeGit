@@ -312,6 +312,10 @@ class GitPullOtherBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
 
         cmd = ['pull', '-v', remote, '%s:%s' % (branch, merge)]
 
+        extra_flags = get_setting('git_merge_flags')
+        if isinstance(extra_flags, list):
+            cmd.extend(extra_flags)
+
         thread = self.git_async(cmd, cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Pulling %s from %s" % (merge, remote))
         runner.start()
