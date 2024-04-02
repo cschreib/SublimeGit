@@ -50,7 +50,7 @@ class GitCheckoutBranchCommand(WindowCommand, GitCheckoutWindowCmd):
         exit, stdout, stderr = self.git(['checkout', branch], cwd=repo)
         if exit == 0:
             panel = self.window.get_output_panel('git-checkout')
-            panel.run_command('git_panel_write', {'content': stderr})
+            panel.run_command('git_panel_write', {'content': stdout})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
             sublime.error_message(self.format_error_output(stdout, stderr))
@@ -93,7 +93,7 @@ class GitCheckoutTagCommand(WindowCommand, GitCheckoutWindowCmd, GitTagHelper):
         exit, stdout, stderr = self.git(['checkout', 'tags/%s' % tag], cwd=repo)
         if exit == 0:
             panel = self.window.get_output_panel('git-checkout')
-            panel.run_command('git_panel_write', {'content': stderr})
+            panel.run_command('git_panel_write', {'content': stdout})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
             sublime.error_message(self.format_error_output(stdout, stderr))
@@ -129,7 +129,7 @@ class GitCheckoutCommitCommand(WindowCommand, GitCheckoutWindowCmd):
         exit, stdout, stderr = self.git(['checkout', commit], cwd=repo)
         if exit == 0:
             panel = self.window.get_output_panel('git-checkout')
-            panel.run_command('git_panel_write', {'content': stderr})
+            panel.run_command('git_panel_write', {'content': stdout})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
             sublime.error_message(self.format_error_output(stdout, stderr))
@@ -173,7 +173,7 @@ class GitCheckoutNewBranchCommand(WindowCommand, GitCheckoutWindowCmd):
         exit, stdout, stderr = self.git(['checkout', b, branch], cwd=repo)
         if exit == 0:
             panel = self.window.get_output_panel('git-checkout')
-            panel.run_command('git_panel_write', {'content': stderr})
+            panel.run_command('git_panel_write', {'content': stdout})
             self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
         else:
             sublime.error_message(self.format_error_output(stdout, stderr))
@@ -223,7 +223,7 @@ class GitCheckoutRemoteBranchCommand(WindowCommand, GitCheckoutWindowCmd, GitRem
             exit, stdout, stderr = self.git(['checkout', branch], cwd=repo)
             if exit == 0:
                 panel = self.window.get_output_panel('git-checkout')
-                panel.run_command('git_panel_write', {'content': stderr})
+                panel.run_command('git_panel_write', {'content': stdout})
                 self.window.run_command('show_panel', {'panel': 'output.git-checkout'})
             else:
                 sublime.error_message(self.format_error_output(stdout, stderr))
