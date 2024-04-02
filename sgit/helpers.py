@@ -203,7 +203,10 @@ class GitBranchHelper(object):
         if remotes:
             args += ['--remotes']
         if merged is not None:
-            args += ['--merged', merged]
+            if type(merged) is str:
+                args += ['--merged', merged]
+            else:
+                args += ['--merged']
 
         lines = self.git_lines(args, cwd=repo)
 

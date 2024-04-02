@@ -50,6 +50,7 @@
     { "caption": "Git: Publish Current Branch", "command": "git_publish_current_branch"},
     { "caption": "Git: Pull", "command": "git_pull"},
     { "caption": "Git: Pull Other Branch", "command": "git_pull_other_branch"},
+    { "caption": "Git: Delete Branch", "command": "git_delete_branch"},
     { "caption": "Git: Delete Merged Branches", "command": "git_delete_merged_branches"},
 
     { "caption": "Git: Add Tag", "command": "git_add_tag"},
