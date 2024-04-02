@@ -198,8 +198,14 @@ class GitBranchHelper(object):
         branch = self.git_string(['symbolic-ref', '-q', 'HEAD'], cwd=repo)
         return branch[11:] if branch.startswith('refs/heads/') else branch
 
-    def get_branches(self, repo, remotes=False):
-        lines = self.git_lines(['branch', '--list', '--no-color', '--remotes' if remotes else None], cwd=repo)
+    def get_branches(self, repo, remotes=False, merged=None):
+        args = ['branch', '--list', '--no-color']
+        if remotes:
+            args += ['--remotes']
+        if merged is not None:
+            args += ['--merged', merged]
+
+        lines = self.git_lines(args, cwd=repo)
 
         branches = []
         for line in lines:

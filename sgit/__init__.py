@@ -56,6 +56,8 @@ from .checkout import (GitCheckoutBranchCommand, GitCheckoutCommitCommand,
                        GitCheckoutNewBranchCommand, GitCheckoutCurrentFileCommand,
                        GitCheckoutTagCommand, GitCheckoutRemoteBranchCommand)
 
+from .branch import GitDeleteMergedBranches
+
 from .merge import GitMergeCommand, GitMergeAbortCommand
 
 from .gitk import GitGitkCommand

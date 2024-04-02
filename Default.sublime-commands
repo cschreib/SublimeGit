@@ -50,12 +50,14 @@
     { "caption": "Git: Publish Current Branch", "command": "git_publish_current_branch"},
     { "caption": "Git: Pull", "command": "git_pull"},
     { "caption": "Git: Pull Other Branch", "command": "git_pull_other_branch"},
+    { "caption": "Git: Delete Merged Branches", "command": "git_delete_merged_branches"},
 
     { "caption": "Git: Add Tag", "command": "git_add_tag"},
     { "caption": "Git: Add Signed Tag", "command": "git_add_tag", "args": {"sign": true}},
     { "caption": "Git: Tag", "command": "git_tag"},
 
     { "caption": "Git: Log", "command": "git_log"},
+    { "caption": "Git: Log Current File", "command": "git_log_current_file"},
     { "caption": "Git: Quick Log", "command": "git_quick_log"},
     { "caption": "Git: Quick Log Current File", "command": "git_quick_log_current_file"},
 
