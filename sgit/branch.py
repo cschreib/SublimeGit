@@ -71,7 +71,7 @@ class GitDeleteMergedBranches(WindowCommand, GitBranchWindowCmd):
         if not repo:
             return
 
-        branches = self.get_branches(repo)
+        branches = self.get_branches(repo, remotes=True)
         choices = []
         for current, name in branches:
             choices.append('%s %s' % ('*' if current else ' ', name))
