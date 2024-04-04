@@ -210,14 +210,19 @@ class GitBranchHelper(object):
 
         lines = self.git_lines(args, cwd=repo)
 
-        branches = []
+        # Store in a dict to avoid duplicates
+        branches = {}
         for line in lines:
             current = line.startswith('*')
             nameparts = line[2:].split(' -> ')
             name = nameparts[1] if len(nameparts) == 2 else nameparts[0]
-            branches.append((current, name))
+            if name in branches:
+                branches[name] = branches[name] or current
+            else:
+                branches[name] = current
 
-        return branches
+        # Convert to flat list
+        return [(c, n) for n, c in branches.items()]
 
 
 class GitRemoteHelper(GitBranchHelper):
