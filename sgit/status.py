@@ -1029,7 +1029,7 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
             if staged and f in errlist:
                 continue
 
-            if s == UNTRACKED_FILES or status == 'N':
+            if s == UNTRACKED_FILES or status == 'N' or status == 'A':
                 action = 'Delete: '
             elif status == 'D':
                 action = 'Resurrect: '
@@ -1060,7 +1060,7 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
             elif status == 'D':
                 self.git(['reset', '-q', '--', f], cwd=repo)
                 self.git(['checkout', '--', f], cwd=repo)
-            elif status == 'N':
+            elif status == 'N' or status == 'A':
                 self.git(['rm', '-f', '--', f], cwd=repo)
             elif f in submodules:
                 if staged:
