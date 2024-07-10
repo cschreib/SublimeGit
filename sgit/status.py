@@ -1056,7 +1056,8 @@ class GitStatusDiscardCommand(TextCommand, GitStatusTextCmd):
                 continue
 
             if s == UNTRACKED_FILES:
-                self.git(['clean', '-d', '--force', '--', f], cwd=repo)
+                # NB: '--force' is specified twice, otherwise this won't clean git repos (e.g. former submodule)
+                self.git(['clean', '-d', '--force', '--force', '--', f], cwd=repo)
             elif status == 'D':
                 self.git(['reset', '-q', '--', f], cwd=repo)
                 self.git(['checkout', '--', f], cwd=repo)
