@@ -27,7 +27,7 @@ from .helpers import GitRepoHelper
 logger = logging.getLogger('SublimeGit.cmd')
 worker_logger = logging.getLogger('SublimeGitWorker')
 
-class SublimeGitException(Exception):
+class JobError(Exception):
     pass
 
 worker_queue = queue.Queue(1)
@@ -62,9 +62,9 @@ def process_queue_one():
         outputs = job()
         worker_logger.info("[%s,%s] got output, sending...", threading.get_ident(), task_id)
     except Exception as e:
-        worker_logger.warning("[%s,%s] got error: %s", threading.get_ident(), task_id, e)
+        worker_logger.warning("[%s,%s] got error: %s\n%s", threading.get_ident(), task_id, e, traceback.format_exc())
         worker_logger.warning("[%s,%s] sending...", threading.get_ident(), task_id)
-        outputs = SublimeGitException("Unhandled exception in queue command: %s" % e)
+        outputs = JobError("Unhandled exception in queue command: %s" % e)
 
     get_output_queue(task_id).put(outputs, timeout=1)
 
@@ -85,10 +85,10 @@ def next_task_id():
     task_id = last_task_id
     return task_id
 
-def dump_worker_thread_stack(operation, task_id):
-    worker_logger.warning("[%s,%s] %s timed out, worker thread stack:", threading.get_ident(), task_id, operation)
+def dump_stack(operation, task_id):
+    worker_logger.warning("[%s,%s] %s worker thread stack:", threading.get_ident(), task_id, operation)
     for entry in get_thread_stack(worker_thread):
-        worker_logger.warning(entry.replace('\r', '').split('\n')[0])
+        worker_logger.warning("[%s,%s] " + entry.replace('\r', '').split('\n')[0], threading.get_ident(), task_id)
 
 def push_new_job(task_id, job):
     num_tries = 0
@@ -97,10 +97,10 @@ def push_new_job(task_id, job):
             worker_queue.put((task_id, job), timeout=0.1)
             return
         except Exception as e:
-            worker_logger.info("[%s,%s] put timed out, waiting some more...", threading.get_ident(), task_id)
+            worker_logger.debug("[%s,%s] put timed out, waiting some more...", threading.get_ident(), task_id)
             num_tries += 1
             if num_tries == max_tries:
-                dump_worker_thread_stack('put', task_id)
+                dump_stack('put', task_id)
                 raise e
 
 def get_job_output(task_id):
@@ -112,10 +112,10 @@ def get_job_output(task_id):
             try:
                 return queue.get(timeout=0.1)
             except Exception as e:
-                worker_logger.info("[%s,%s] get timed out, waiting some more...", threading.get_ident(), task_id)
+                worker_logger.debug("[%s,%s] get timed out, waiting some more...", threading.get_ident(), task_id)
                 num_tries += 1
                 if num_tries == max_tries:
-                    dump_worker_thread_stack('get', task_id)
+                    dump_stack('get', task_id)
                     raise e
 
     finally:
@@ -203,7 +203,7 @@ class Cmd(object):
                 worker_logger.info("[%s,%s] wait for output...", threading.get_ident(), task_id)
                 outputs = get_job_output(task_id)
             except Exception as e:
-                outputs = SublimeGitException("Could not execute command: %s" % e)
+                outputs = JobError("Could not execute command: %s" % e)
 
         if isinstance(outputs, Exception):
             worker_logger.info("[%s,%s] got error", threading.get_ident(), task_id)
@@ -226,7 +226,7 @@ class Cmd(object):
                 worker_logger.info("[%s,%s] async wait for output...", threading.get_ident(), task_id)
                 outputs = get_job_output(task_id)
             except Exception as e:
-                outputs = SublimeGitException("Could not execute command: %s" % e)
+                outputs = JobError("Could not execute command: %s" % e)
 
             if isinstance(outputs, Exception):
                 worker_logger.info("[%s,%s] async got error", threading.get_ident(), task_id)
@@ -273,12 +273,12 @@ class Cmd(object):
                 if ignore_errors:
                     return (0, '', '')
                 sublime.error_message(self.get_executable_error())
-                return SublimeGitException("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, e))
+                return JobError("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, e))
             except UnicodeDecodeError as e:
                 if ignore_errors:
                     return (0, '', '')
                 sublime.error_message(self.get_decoding_error(encoding, fallback))
-                return SublimeGitException("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, command))
+                return JobError("[%s,%s] Could not execute command: %s" % (threading.get_ident(), task_id, command))
 
         return self.worker_run(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback, task_id), task_id=task_id)
 
