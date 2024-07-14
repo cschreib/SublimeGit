@@ -8,6 +8,14 @@
     "log_level": "WARNING",
 
     /*
+     * Worker Log level.
+     *
+     * If you are experiencing issues, please set this to DEBUG and
+     * provide the log when reporting an issue.
+     */
+    "worker_log_level": "WARNING",
+
+    /*
      * Main encoding used for interacting with Git.
      */
     "encoding": "utf-8",
