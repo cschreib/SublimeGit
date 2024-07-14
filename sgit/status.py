@@ -121,7 +121,7 @@ class GitStatusBuilder(GitCmd, GitStatusHelper, GitRemoteHelper, GitStashHelper)
         head_rc, head, _ = self.git(['log', '--max-count=1', '--abbrev-commit', '--pretty=oneline'], cwd=repo)
 
         status = ""
-        if remote:
+        if remote and self.has_head() and self.has_remote_head(remote):
             status += "Remote:\t%s/%s @ %s\n" % (remote, branch, remote_url)
             remote_ahead, local_ahead = self.get_remote_commit_differences(repo, remote, branch)
             if local_ahead != 0 and remote_ahead != 0:

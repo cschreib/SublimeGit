@@ -224,6 +224,14 @@ class GitBranchHelper(object):
         # Convert to flat list
         return [(c, n) for n, c in branches.items()]
 
+    def has_head(self):
+        exit, _, _ = self.git(['rev-parse', 'HEAD'])
+        return exit == 0
+
+    def has_remote_head(self, remote):
+        exit, _, _ = self.git(['rev-parse', f'{remote}/HEAD'])
+        return exit == 0
+
 
 class GitRemoteHelper(GitBranchHelper):
 

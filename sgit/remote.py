@@ -368,14 +368,15 @@ class GitPushCommand(WindowCommand, GitCmd, GitRemoteHelper):
                 self.window.run_command('git_publish_current_branch')
             return
 
-        remote_ahead, _ = self.get_remote_commit_differences(repo, branch_remote, branch)
-        logger.warning('{}'.format(remote_ahead))
-        if remote_ahead != 0:
-            if force:
-                if not sublime.ok_cancel_dialog(FORCE_PUSH, 'Force Push'):
-                    return
-            else:
-                return sublime.error_message(REMOTE_DIVERGED)
+        if self.has_head() and self.has_remote_head(branch_remote):
+            remote_ahead, _ = self.get_remote_commit_differences(repo, branch_remote, branch)
+            logger.warning('{}'.format(remote_ahead))
+            if remote_ahead != 0:
+                if force:
+                    if not sublime.ok_cancel_dialog(FORCE_PUSH, 'Force Push'):
+                        return
+                else:
+                    return sublime.error_message(REMOTE_DIVERGED)
 
         self.panel = self.window.get_output_panel('git-push')
         self.panel_shown = False
