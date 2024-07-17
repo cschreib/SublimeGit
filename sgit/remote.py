@@ -57,7 +57,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         choices = self.format_quick_remotes(remotes)
 
         if len(choices) > 1:
-            choices.append(['+ All', 'Fetch from all configured remotes', 'git fetch --all'])
+            choices.append(['+ All', 'Fetch from all configured remotes', 'git fetch --all --prune'])
 
             def on_done(idx):
                 if idx == -1:
@@ -75,7 +75,7 @@ class GitFetchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.panel = self.window.get_output_panel('git-fetch')
         self.panel_shown = False
 
-        thread = self.git_async(['fetch', '-v', remote if remote else '--all'], cwd=repo, on_data=self.on_data)
+        thread = self.git_async(['fetch', '-v', remote if remote else '--all', '--prune'], cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Fetching from %s" % (remote if remote else "all remotes"))
         runner.start()
 
@@ -138,7 +138,7 @@ class GitFetchSingleBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.panel = self.window.get_output_panel('git-pull')
         self.panel_shown = False
 
-        cmd = ['fetch', remote, '%s:%s' % (branch, branch)]
+        cmd = ['fetch', remote, '%s:%s' % (branch, branch), '--prune']
 
         thread = self.git_async(cmd, cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Fetching %s from %s" % (branch, remote))
@@ -316,7 +316,7 @@ class GitPullOtherBranchCommand(WindowCommand, GitCmd, GitRemoteHelper):
         if isinstance(extra_flags, list):
             cmd.extend(extra_flags)
 
-        cmd.extend(['-v', remote, '%s:%s' % (branch, merge)])
+        cmd.extend(['-v', remote, '%s:%s' % (branch, merge), '--prune'])
 
         thread = self.git_async(cmd, cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Pulling %s from %s" % (merge, remote))
@@ -442,7 +442,7 @@ class GitPullCommand(WindowCommand, GitCmd, GitRemoteHelper):
         self.panel = self.window.get_output_panel('git-pull')
         self.panel_shown = False
 
-        thread = self.git_async(['pull', '-v'], cwd=repo, on_data=self.on_data)
+        thread = self.git_async(['pull', '-v', '--prune'], cwd=repo, on_data=self.on_data)
         runner = StatusSpinner(thread, "Pulling from %s" % (branch_remote))
         runner.start()
 
