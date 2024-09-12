@@ -22,7 +22,8 @@ from .help import GitHelpCommand, GitVersionCommand
 
 from .gc import GitGarbageCollectCommand
 
-from .log import GitLogCommand, GitQuickLogCommand, GitQuickLogCurrentFileCommand
+from .log import (GitLogCommand, GitLogCurrentFileCommand, GitLogRefreshCommand,
+                  GitQuickLogCommand, GitQuickLogCurrentFileCommand)
 
 from .blame import (GitBlameCommand, GitBlameRefreshCommand, GitBlameShowCommand,
                     GitBlameBlameCommand)

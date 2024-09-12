@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>git-log</string>
+	</array>
+	<key>name</key>
+	<string>SublimeGit Log</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>begin</key>
+			<string>^</string>
+			<key>end</key>
+			<string>\n</string>
+			<key>name</key>
+			<string>string.other.git-log.entry</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>^[\\/\*|\s]+</string>
+			<key>name</key>
+			<string>string.other.git-log.graph</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>text.git-log</string>
+	<key>uuid</key>
+	<string>4971f1a7-ba60-4504-b57c-69dca3f85d8c</string>
+</dict>
+</plist>

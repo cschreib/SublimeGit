@@ -309,5 +309,13 @@
         "context": [
             { "key": "selector", "operator": "equal", "operand": "source.git-diff"}
         ]
-    }
+    },
+
+    /*** GIT LOG ***/
+    // Refresh
+    { "keys": ["r"], "command": "git_log_refresh",
+        "context": [
+            { "key": "selector", "operator": "equal", "operand": "source.git-log"}
+        ]
+    },
 ]

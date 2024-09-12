@@ -422,8 +422,32 @@ class GitLogHelper(object):
                             '%an%x03'  # author name
                             '%aE%x03'  # author email
                             '%ad%x03'  # auth date
-                            '%ar'    # auth date relative
+                            '%ar'      # auth date relative
                             '%x04')
+
+    GIT_GRAPH_LOG_FORMAT = ('%x03'     # graph
+                            '%s%x03'   # subject
+                            '%H%x03'   # commit sha1
+                            '%P%x03'   # parent sha1
+                            '%an%x03'  # author name
+                            '%aE%x03'  # author email
+                            '%ad%x03'  # auth date
+                            '%ar%x03'  # auth date relative
+                            '%d')      # ref name
+
+    def split_log_output(self, out, fmt, sep=u'\u0003', end='\n', checked=True):
+        parts_expected = fmt.count('%x03') + 1
+
+        lines = []
+        for line in out.split(end):
+            line = line.strip()
+            if line:
+                parts = line.split(sep)
+                if checked and len(parts) != parts_expected:
+                    raise Exception("The line %s splits to %s" % (line, parts))
+                lines.append(parts)
+
+        return lines
 
     def get_quick_log(self, repo, path=None, follow=False):
         cmd = ['log', '--no-color', '--date=local', '--format=%s' % self.GIT_QUICK_LOG_FORMAT]
@@ -431,17 +455,10 @@ class GitLogHelper(object):
             cmd.append('--follow')
         if path:
             cmd.extend(['--', path])
+
         out = self.git_string(cmd, cwd=repo, strip=False)
 
-        lines = []
-        for line in out.split(u'\u0004'):
-            line = line.strip()
-            if line:
-                parts = line.split(u'\u0003')
-                if len(parts) != 6:
-                    raise Exception("The line %s splits to %s", line, parts)
-                lines.append(parts)
-        return lines
+        return self.split_log_output(out, self.GIT_QUICK_LOG_FORMAT, end=u'\u0004')
 
     def format_quick_log(self, log):
         hashes = [l[1] for l in log]
@@ -449,6 +466,17 @@ class GitLogHelper(object):
         for subject, sha, name, email, dt, reldt in log:
             choices.append([subject, '%s by %s <%s>' % (sha[0:8], name, email), '%s (%s)' % (reldt, dt)])
         return hashes, choices
+
+    def get_graph_log(self, repo, path=None, follow=False):
+        cmd = ['log', '--no-color', '--date=local', '--graph', '--format=%s' % self.GIT_GRAPH_LOG_FORMAT]
+        if follow:
+            cmd.append('--follow')
+        if path:
+            cmd.extend(['--', path])
+
+        out = self.git_string(cmd, cwd=repo, strip=False)
+
+        return self.split_log_output(out, self.GIT_GRAPH_LOG_FORMAT, end='\n', checked=False)
 
 
 class GitTagHelper(object):
