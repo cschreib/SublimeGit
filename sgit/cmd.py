@@ -283,7 +283,7 @@ class Cmd(object):
         return self.worker_run(partial(job, command, stdin, cwd, environment, ignore_errors, encoding, fallback, task_id), task_id=task_id)
 
     # async commands
-    def cmd_async(self, cmd, cwd=None, on_data=None, on_complete=None, on_error=None, on_exception=None):
+    def cmd_async(self, cmd, cwd=None, with_stderr=True, on_data=None, on_complete=None, on_error=None, on_exception=None):
         command = self.build_command(cmd)
         environment = self.env()
         encoding = get_setting('encoding', 'utf-8')
@@ -298,7 +298,7 @@ class Cmd(object):
 
             proc = subprocess.Popen(command,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT,
+                                    stderr=subprocess.STDOUT if with_stderr else subprocess.DEVNULL,
                                     startupinfo=self.startupinfo(),
                                     env=environment)
 
