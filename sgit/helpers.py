@@ -255,7 +255,9 @@ class GitRemoteHelper(GitBranchHelper):
         choices = []
         for remote, urls in list(data.items()):
             choices.append([remote, urls.get('(fetch)', None), urls.get('(push)', None)])
-        return choices
+
+        sort_order = {'origin': 0, 'upstream': 1}
+        return sorted(choices, key=lambda x: sort_order.get(x[0], 99))
 
     def get_remote_url(self, repo, remote):
         return self.git_string(['config', 'remote.%s.url' % remote], cwd=repo)
