@@ -58,7 +58,7 @@ class GitDeleteBranch(WindowCommand, GitBranchWindowCmd):
         if exit == 0:
             sublime.status_message('Branch {} deleted'.format(branch))
         else:
-            sublime.error_message(self.format_error_message(stdout, stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
 
 
 class GitDeleteMergedBranches(WindowCommand, GitBranchWindowCmd):
@@ -115,6 +115,7 @@ class GitDeleteMergedBranches(WindowCommand, GitBranchWindowCmd):
             if len(selected_branches) > 1:
                 sublime.status_message('{} branches deleted'.format(len(selected_branches)))
             else:
-                sublime.status_message('Branch {} deleted'.format(branch))
+                for branch in selected_branches:
+                    sublime.status_message('Branche {} deleted'.format(branch))
         else:
-            sublime.error_message(self.format_error_message(stdout, stderr))
+            sublime.error_message(self.format_error_output(stdout, stderr))
