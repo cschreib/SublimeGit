@@ -287,7 +287,11 @@ class GitRemoteHelper(GitBranchHelper):
                          remote + "/" + branch + "..." + branch],
                          cwd=repo)
 
-        remote_ahead, local_ahead = result.split('\t')
+        results = result.split('\t')
+        if len(results) != 2:
+            return 0, 0
+
+        remote_ahead, local_ahead = results
         return int(remote_ahead), int(local_ahead)
 
 
