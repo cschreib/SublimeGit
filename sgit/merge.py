@@ -72,3 +72,46 @@ class GitMergeAbortCommand(WindowCommand, GitCmd, GitBranchHelper, GitErrorHelpe
             sublime.error_message(self.format_error_output(stdout, stderr))
 
         self.window.run_command('git_status', {'refresh_only': True})
+
+
+
+class GitRebaseCommand(WindowCommand, GitCmd, GitBranchHelper, GitErrorHelper, GitStatusHelper):
+    """
+    Documentation coming soon.
+    """
+
+    def run(self):
+        repo = self.get_repo()
+        if not repo:
+            return
+
+        branches = self.get_branches(repo)
+        choices = [name for c, name in branches if not c]
+
+        self.window.show_quick_panel(choices, partial(self.on_done, repo, choices), sublime.MONOSPACE_FONT)
+
+    def on_done(self, repo, choices, idx):
+        if idx == -1:
+            return
+
+        if self.is_merging(repo):
+            return sublime.error_message(GIT_MERGING_IN_PROGRESS)
+
+        cmd = ['rebase']
+
+        extra_flags = get_setting('git_rebase_flags')
+        if isinstance(extra_flags, list):
+            cmd.extend(extra_flags)
+
+        branch = choices[idx]
+        cmd.append(branch)
+
+        exit, stdout, stderr = self.git(cmd, cwd=repo)
+        if exit == 0:
+            panel = self.window.get_output_panel('git-rebase')
+            panel.run_command('git_panel_write', {'content': stdout})
+            self.window.run_command('show_panel', {'panel': 'output.git-rebase'})
+        else:
+            sublime.error_message(self.format_error_output(stdout, stderr))
+
+        self.window.run_command('git_status', {'refresh_only': True})
